@@ -1,0 +1,7 @@
+docker-compose down -v
+
+docker-compose up -d
+
+docker exec -it kafka0 sh -c "kafka-topics.sh --create --topic orders --bootstrap-server localhost:9092 --partitions 3 --replication-factor 2"
+
+docker exec -it kafka0 sh -c "kafka-topics.sh --describe --topic orders --bootstrap-server localhost:9092"
