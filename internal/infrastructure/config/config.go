@@ -8,10 +8,14 @@ import (
 )
 
 type Config struct {
-	BootstrapServers      string
-	OrdersTopic           string
-	ConsumerPullTimeoutMs int
-	ConsumerPushTimeoutMs int
+	KafkaBootstrapServers      string
+	OrdersTopic                string
+	KafkaCustomerGroup         string
+	KafkaSessionTimeoutMs      int
+	KafkaAutoOffsetReset       string
+	KafkaConsumerPullTimeoutMs int
+	KafkaConsumerPushTimeoutMs int
+	KafkaAcks                  string
 }
 
 func NewConfig() *Config {
@@ -27,10 +31,14 @@ func NewConfig() *Config {
 	}
 
 	return &Config{
-		BootstrapServers:      getEnv("BOOTSTRAP_SERVERS", ""),
-		OrdersTopic:           getEnv("ORDERS_TOPIC", ""),
-		ConsumerPullTimeoutMs: getEnvInt("CONSUMER_PULL_TIMEOUT_MS", 0),
-		ConsumerPushTimeoutMs: getEnvInt("CONSUMER_PUSH_TIMEOUT_MS", 0),
+		KafkaBootstrapServers:      getEnv("KAFKA_BOOTSTRAP_SERVERS", ""),
+		OrdersTopic:                getEnv("ORDERS_TOPIC", ""),
+		KafkaCustomerGroup:         getEnv("KAFKA_CUSTOMER_GROUP", ""),
+		KafkaSessionTimeoutMs:      getEnvInt("KAFKA_SESSION_TIMEOUT_MS", 0),
+		KafkaAutoOffsetReset:       getEnv("KAFKA_AUTO_OFFSET_RESET", ""),
+		KafkaConsumerPullTimeoutMs: getEnvInt("KAFKA_CONSUMER_PULL_TIMEOUT_MS", 0),
+		KafkaConsumerPushTimeoutMs: getEnvInt("KAFKA_CONSUMER_PUSH_TIMEOUT_MS", 0),
+		KafkaAcks:                  getEnv("KAFKA_ACKS", ""),
 	}
 }
 

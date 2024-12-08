@@ -26,7 +26,7 @@ func (or OrderReceiver) ReceivePullMessage(
 		case <-doneCh:
 			return
 		default:
-			ev := or.pullCons.Poll(or.conf.ConsumerPullTimeoutMs)
+			ev := or.pullCons.Poll(or.conf.KafkaConsumerPullTimeoutMs)
 			if ev == nil {
 				continue
 			}
@@ -55,7 +55,7 @@ func (or OrderReceiver) ReceivePushMessage(doneCh chan struct{}, outCh chan []by
 		case <-doneCh:
 			return
 		default:
-			ev := or.pushCons.Poll(or.conf.ConsumerPushTimeoutMs)
+			ev := or.pushCons.Poll(or.conf.KafkaConsumerPushTimeoutMs)
 			if ev == nil {
 				continue
 			}
@@ -74,18 +74,18 @@ func (or OrderReceiver) ReceivePushMessage(doneCh chan struct{}, outCh chan []by
 
 func NewOrderReceiver(lc fx.Lifecycle, conf *config.Config, l *zap.SugaredLogger) *OrderReceiver {
 	pullCons := newConsumer(conf, &kafka.ConfigMap{
-		"bootstrap.servers":  conf.BootstrapServers,
-		"group.id":           "consumer_group_1",
-		"session.timeout.ms": 6000,
-		"auto.offset.reset":  "earliest",
+		"bootstrap.servers":  conf.KafkaBootstrapServers,
+		"group.id":           conf.KafkaCustomerGroup,
+		"session.timeout.ms": conf.KafkaSessionTimeoutMs,
+		"auto.offset.reset":  conf.KafkaAutoOffsetReset,
 		"enable.auto.commit": "false",
 	}, l)
 
 	pushCons := newConsumer(conf, &kafka.ConfigMap{
-		"bootstrap.servers":  conf.BootstrapServers,
-		"group.id":           "consumer_group_1",
-		"session.timeout.ms": 6000,
-		"auto.offset.reset":  "earliest",
+		"bootstrap.servers":  conf.KafkaBootstrapServers,
+		"group.id":           conf.KafkaCustomerGroup,
+		"session.timeout.ms": conf.KafkaSessionTimeoutMs,
+		"auto.offset.reset":  conf.KafkaAutoOffsetReset,
 		"enable.auto.commit": "true",
 	}, l)
 

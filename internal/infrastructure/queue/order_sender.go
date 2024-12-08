@@ -40,8 +40,8 @@ func (os OrderSender) SendMessage(payload []byte) error {
 
 func NewOrderSender(lc fx.Lifecycle, c *config.Config, l *zap.SugaredLogger) *OrderSender {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": c.BootstrapServers,
-		"acks":              "all",
+		"bootstrap.servers": c.KafkaBootstrapServers,
+		"acks":              c.KafkaAcks,
 	})
 	if err != nil {
 		l.Error("Can't create producer: ", err.Error())
