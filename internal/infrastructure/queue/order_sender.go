@@ -2,18 +2,18 @@ package queue
 
 import (
 	"context"
-	"fmt"
 	"kafka-1/internal/infrastructure/config"
-	"log"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 type OrderSender struct {
 	p            *kafka.Producer
 	c            *config.Config
 	deliveryChan chan kafka.Event
+	l            *zap.SugaredLogger
 }
 
 func (os OrderSender) SendMessage(payload []byte) error {
@@ -32,23 +32,21 @@ func (os OrderSender) SendMessage(payload []byte) error {
 	if m.TopicPartition.Error != nil {
 		return m.TopicPartition.Error
 	} else {
-		fmt.Printf("Сообщение отправлено в топик %s [%d] офсет %v\n",
-			*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+		os.l.Info("Message successfully sent")
 	}
 
 	return nil
 }
 
-func NewOrderSender(lc fx.Lifecycle, c *config.Config) *OrderSender {
-	// Настройте подтверждение доставки. Для продюсера используйте гарантию At Least Once («Как минимум один раз»)
+func NewOrderSender(lc fx.Lifecycle, c *config.Config, l *zap.SugaredLogger) *OrderSender {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers": c.BootstrapServers,
 		"acks":              "all",
 	})
 	if err != nil {
-		log.Fatalf("Невозможно создать продюсера: %s\n", err)
+		l.Error("Can't create producer: ", err.Error())
 	}
-	log.Printf("Продюсер создан %v\n", p)
+	l.Info("Producer successfully created")
 
 	deliveryChan := make(chan kafka.Event)
 
@@ -60,5 +58,5 @@ func NewOrderSender(lc fx.Lifecycle, c *config.Config) *OrderSender {
 		},
 	})
 
-	return &OrderSender{p, c, deliveryChan}
+	return &OrderSender{p, c, deliveryChan, l}
 }
