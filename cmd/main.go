@@ -7,7 +7,6 @@ import (
 	"go.uber.org/fx"
 )
 
-// ничего не делает, задание в файле теста
 func main() {
 	fx.New(
 		di.InjectApp(),
