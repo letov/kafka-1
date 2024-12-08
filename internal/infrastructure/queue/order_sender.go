@@ -53,6 +53,7 @@ func NewOrderSender(lc fx.Lifecycle, c *config.Config, l *zap.SugaredLogger) *Or
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			close(deliveryChan)
+			p.Flush(c.KafkaFlushTimeoutMs)
 			p.Close()
 			return nil
 		},

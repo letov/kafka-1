@@ -16,6 +16,7 @@ type Config struct {
 	KafkaConsumerPullTimeoutMs int
 	KafkaConsumerPushTimeoutMs int
 	KafkaAcks                  string
+	KafkaFlushTimeoutMs        int
 }
 
 func NewConfig() *Config {
@@ -39,6 +40,7 @@ func NewConfig() *Config {
 		KafkaConsumerPullTimeoutMs: getEnvInt("KAFKA_CONSUMER_PULL_TIMEOUT_MS", 0),
 		KafkaConsumerPushTimeoutMs: getEnvInt("KAFKA_CONSUMER_PUSH_TIMEOUT_MS", 0),
 		KafkaAcks:                  getEnv("KAFKA_ACKS", ""),
+		KafkaFlushTimeoutMs:        getEnvInt("KAFKA_FLUSH_TIMEOUT_MS", 0),
 	}
 }
 
