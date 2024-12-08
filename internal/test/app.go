@@ -17,6 +17,7 @@ func InjectApp() fx.Option {
 }
 
 func initTest(t *testing.T, r interface{}) {
+	t.Setenv("IS_TEST_ENV", "true")
 	app := fxtest.New(t, InjectApp(), fx.Invoke(r))
 	defer app.RequireStop()
 	app.RequireStart()
