@@ -2,7 +2,7 @@ package test
 
 import (
 	"encoding/json"
-	"fmt"
+	"kafka-1/internal/infrastructure/config"
 	"kafka-1/internal/infrastructure/dto"
 	"kafka-1/internal/infrastructure/queue"
 	"sync"
@@ -40,7 +40,8 @@ func Test_Kafka(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			initTest(t, func(
 				os *queue.OrderSender,
-				or *queue.OrderReceiver,
+				orf *queue.OrderReceiverFactory,
+				conf *config.Config,
 			) {
 				const msgCnt = 10
 
@@ -58,46 +59,48 @@ func Test_Kafka(t *testing.T) {
 
 				doneCh := make(chan struct{})
 				outCh1 := make(chan interface{})
-				outCh2 := make(chan []byte)
+				outCh2 := make(chan interface{})
 
-				go or.ReceivePullMessage(doneCh, outCh1, func(data []byte) (interface{}, error) {
-					var o dto.Order
-					err := json.Unmarshal(data, &o)
-					if err != nil {
-						return nil, err
-					}
-					return o, nil
-				})
+				go orf.NewOrderReceiver(conf.KafkaCustomerGroup1, false).
+					ReceiveMessage(doneCh, outCh1, conf.KafkaConsumerPushTimeoutMs, func(data []byte) (interface{}, error) {
+						var o dto.Order
+						err := json.Unmarshal(data, &o)
+						if err != nil {
+							return nil, err
+						}
+						return o, nil
+					})
 
-				go or.ReceivePushMessage(doneCh, outCh2)
+				go orf.NewOrderReceiver(conf.KafkaCustomerGroup2, true).
+					ReceiveMessage(doneCh, outCh2, conf.KafkaConsumerPullTimeoutMs, func(data []byte) (interface{}, error) {
+						var o dto.Order
+						err := json.Unmarshal(data, &o)
+						if err != nil {
+							return nil, err
+						}
+						return o, nil
+					})
 
-				pollCnt := 0
+				pullCnt := 0
 				pushCnt := 0
 
 			loop:
 				for {
 					select {
 					case <-outCh1:
-						pollCnt++
-					case data := <-outCh2:
-						var o dto.Order
-						err := json.Unmarshal(data, &o)
-						if err != nil {
-							fmt.Println(err)
-						}
+						pullCnt++
+					case <-outCh2:
 						pushCnt++
 					default:
-						println(pollCnt, pushCnt)
-						if pollCnt >= msgCnt && pushCnt >= msgCnt {
+						if pullCnt >= msgCnt && pushCnt >= msgCnt {
 							doneCh <- struct{}{}
 							break loop
 						}
 					}
 				}
 
-				assert.Equal(t, pushCnt+pollCnt, 2*msgCnt)
-				assert.Equal(t, pushCnt > 0, true)
-				assert.Equal(t, pollCnt > 0, true)
+				assert.Equal(t, pushCnt, msgCnt)
+				assert.Equal(t, pullCnt, msgCnt)
 			})
 		})
 	}

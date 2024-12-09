@@ -13,7 +13,7 @@ func GetConstructors() []interface{} {
 		config.NewConfig,
 		logger.NewLogger,
 		queue.NewOrderSender,
-		queue.NewOrderReceiver,
+		queue.NewOrderReceiverFactory,
 	}
 }
 
