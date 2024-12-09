@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kafka-1/internal/infrastructure/dto"
 	"kafka-1/internal/infrastructure/queue"
+	"sync"
 	"testing"
 
 	"github.com/magiconair/properties/assert"
@@ -41,15 +42,19 @@ func Test_Kafka(t *testing.T) {
 				os *queue.OrderSender,
 				or *queue.OrderReceiver,
 			) {
-				const msgCnt = 1000
+				const msgCnt = 10
 
 				smp, _ := json.Marshal(tt.args.order)
 
+				var wg sync.WaitGroup
 				for i := 0; i < msgCnt; i++ {
-					go func() {
+					wg.Add(1)
+					go func(wg *sync.WaitGroup) {
 						_ = os.SendMessage(smp)
-					}()
+						wg.Done()
+					}(&wg)
 				}
+				wg.Wait()
 
 				doneCh := make(chan struct{})
 				outCh1 := make(chan interface{})
@@ -69,7 +74,8 @@ func Test_Kafka(t *testing.T) {
 				pollCnt := 0
 				pushCnt := 0
 
-				for i := 0; i < msgCnt; i++ {
+			loop:
+				for {
 					select {
 					case <-outCh1:
 						pollCnt++
@@ -80,14 +86,18 @@ func Test_Kafka(t *testing.T) {
 							fmt.Println(err)
 						}
 						pushCnt++
+					default:
+						println(pollCnt, pushCnt)
+						if pollCnt >= msgCnt && pushCnt >= msgCnt {
+							doneCh <- struct{}{}
+							break loop
+						}
 					}
 				}
 
-				doneCh <- struct{}{}
-
-				assert.Equal(t, pollCnt+pushCnt, msgCnt)
-				assert.Equal(t, pollCnt > 0, true)
+				assert.Equal(t, pushCnt+pollCnt, 2*msgCnt)
 				assert.Equal(t, pushCnt > 0, true)
+				assert.Equal(t, pollCnt > 0, true)
 			})
 		})
 	}

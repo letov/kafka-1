@@ -75,7 +75,7 @@ func (or OrderReceiver) ReceivePushMessage(doneCh chan struct{}, outCh chan []by
 func NewOrderReceiver(lc fx.Lifecycle, conf *config.Config, l *zap.SugaredLogger) *OrderReceiver {
 	pullCons := newConsumer(conf, &kafka.ConfigMap{
 		"bootstrap.servers":  conf.KafkaBootstrapServers,
-		"group.id":           conf.KafkaCustomerGroup,
+		"group.id":           conf.KafkaCustomerGroup1,
 		"session.timeout.ms": conf.KafkaSessionTimeoutMs,
 		"auto.offset.reset":  conf.KafkaAutoOffsetReset,
 		"enable.auto.commit": "false",
@@ -83,7 +83,7 @@ func NewOrderReceiver(lc fx.Lifecycle, conf *config.Config, l *zap.SugaredLogger
 
 	pushCons := newConsumer(conf, &kafka.ConfigMap{
 		"bootstrap.servers":  conf.KafkaBootstrapServers,
-		"group.id":           conf.KafkaCustomerGroup,
+		"group.id":           conf.KafkaCustomerGroup2,
 		"session.timeout.ms": conf.KafkaSessionTimeoutMs,
 		"auto.offset.reset":  conf.KafkaAutoOffsetReset,
 		"enable.auto.commit": "true",
