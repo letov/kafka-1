@@ -1,14 +1,14 @@
 package test
 
 import (
-	"encoding/json"
 	"kafka-1/internal/infrastructure/config"
 	"kafka-1/internal/infrastructure/dto"
 	"kafka-1/internal/infrastructure/queue"
-	"sync"
+	"strconv"
 	"testing"
 
 	"github.com/magiconair/properties/assert"
+	"go.uber.org/zap"
 )
 
 func Test_Kafka(t *testing.T) {
@@ -42,65 +42,54 @@ func Test_Kafka(t *testing.T) {
 				os *queue.OrderSender,
 				orf *queue.OrderReceiverFactory,
 				conf *config.Config,
+				l *zap.SugaredLogger,
 			) {
-				const msgCnt = 10
-
-				smp, _ := json.Marshal(tt.args.order)
-
-				var wg sync.WaitGroup
-				for i := 0; i < msgCnt; i++ {
-					wg.Add(1)
-					go func(wg *sync.WaitGroup) {
-						_ = os.SendMessage(smp)
-						wg.Done()
-					}(&wg)
-				}
-				wg.Wait()
+				msgCnt := 1000
 
 				doneCh := make(chan struct{})
+				inCh := make(chan queue.KeyMsg)
+
+				os.SendMessages(doneCh, inCh)
+
+				for i := 0; i < msgCnt; i++ {
+					key := strconv.Itoa(i)
+					inCh <- queue.KeyMsg{Key: key, Msg: tt.args.order}
+				}
+
 				outCh1 := make(chan interface{})
 				outCh2 := make(chan interface{})
 
-				go orf.NewOrderReceiver(conf.KafkaCustomerGroup1, false).
-					ReceiveMessage(doneCh, outCh1, conf.KafkaConsumerPushTimeoutMs, func(data []byte) (interface{}, error) {
-						var o dto.Order
-						err := json.Unmarshal(data, &o)
-						if err != nil {
-							return nil, err
-						}
-						return o, nil
-					})
+				r1 := orf.NewOrderReceiver(conf.KafkaCustomerGroup1, false)
+				r1.ReceiveMessages(doneCh, outCh1, conf.KafkaConsumerPushTimeoutMs)
 
-				go orf.NewOrderReceiver(conf.KafkaCustomerGroup2, true).
-					ReceiveMessage(doneCh, outCh2, conf.KafkaConsumerPullTimeoutMs, func(data []byte) (interface{}, error) {
-						var o dto.Order
-						err := json.Unmarshal(data, &o)
-						if err != nil {
-							return nil, err
-						}
-						return o, nil
-					})
+				r2 := orf.NewOrderReceiver(conf.KafkaCustomerGroup2, true)
+				r2.ReceiveMessages(doneCh, outCh2, conf.KafkaConsumerPullTimeoutMs)
 
-				pullCnt := 0
-				pushCnt := 0
+				cnt1 := 0
+				cnt2 := 0
 
 			loop:
 				for {
 					select {
-					case <-outCh1:
-						pullCnt++
-					case <-outCh2:
-						pushCnt++
+					case m1 := <-outCh1:
+						l.Info("ch1: ", m1)
+						cnt1++
+					case m2 := <-outCh2:
+						l.Info("ch2: ", m2)
+						cnt2++
 					default:
-						if pullCnt >= msgCnt && pushCnt >= msgCnt {
-							doneCh <- struct{}{}
+						if cnt1 == msgCnt && cnt2 == msgCnt {
 							break loop
 						}
 					}
 				}
 
-				assert.Equal(t, pushCnt, msgCnt)
-				assert.Equal(t, pullCnt, msgCnt)
+				assert.Equal(t, cnt1 == msgCnt, true)
+				assert.Equal(t, cnt2 == msgCnt, true)
+
+				doneCh <- struct{}{}
+				close(doneCh)
+				close(inCh)
 			})
 		})
 	}

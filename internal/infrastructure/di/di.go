@@ -4,6 +4,7 @@ import (
 	"kafka-1/internal/infrastructure/config"
 	"kafka-1/internal/infrastructure/logger"
 	"kafka-1/internal/infrastructure/queue"
+	"kafka-1/internal/infrastructure/storage"
 
 	"go.uber.org/fx"
 )
@@ -14,6 +15,8 @@ func GetConstructors() []interface{} {
 		logger.NewLogger,
 		queue.NewOrderSender,
 		queue.NewOrderReceiverFactory,
+		storage.NewStorage,
+		queue.NewSchema,
 	}
 }
 

@@ -18,6 +18,8 @@ type Config struct {
 	KafkaConsumerPushTimeoutMs int
 	KafkaAcks                  string
 	KafkaFlushTimeoutMs        int
+	SchemaregistryUrl          string
+	RedisOpt                   string
 }
 
 func NewConfig() *Config {
@@ -43,6 +45,8 @@ func NewConfig() *Config {
 		KafkaConsumerPushTimeoutMs: getEnvInt("KAFKA_CONSUMER_PUSH_TIMEOUT_MS", 0),
 		KafkaAcks:                  getEnv("KAFKA_ACKS", ""),
 		KafkaFlushTimeoutMs:        getEnvInt("KAFKA_FLUSH_TIMEOUT_MS", 0),
+		SchemaregistryUrl:          getEnv("SCHEMA_REGISTRY_URL", ""),
+		RedisOpt:                   getEnv("REDIS_OPT", ""),
 	}
 }
 

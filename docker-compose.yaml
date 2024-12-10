@@ -70,6 +70,28 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka0:9092
       - KAFKA_CLUSTERS_0_NAME=kraft
 
+  schema-registry:
+    image: bitnami/schema-registry:7.6
+    ports:
+      - '8081:8081'
+    depends_on:
+      - kafka0
+      - kafka1
+      - kafka2
+    environment:
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKA_BROKERS: PLAINTEXT://kafka0:9092,PLAINTEXT://kafka1:9092,PLAINTEXT://kafka2:9092
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "26379:6379"
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+
 volumes:
   kafka_0_data:
   kafka_1_data:
