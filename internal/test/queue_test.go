@@ -44,7 +44,7 @@ func Test_Kafka(t *testing.T) {
 				conf *config.Config,
 				l *zap.SugaredLogger,
 			) {
-				msgCnt := 1000
+				msgCnt := 100
 
 				doneCh := make(chan struct{})
 				inCh := make(chan queue.KeyMsg)

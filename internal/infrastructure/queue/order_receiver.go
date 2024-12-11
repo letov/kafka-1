@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"kafka-1/internal/infrastructure/config"
+	"kafka-1/internal/infrastructure/dto"
 	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -44,8 +45,8 @@ func (or OrderReceiver) ReceiveMessages(
 				switch e := ev.(type) {
 				case *kafka.Message:
 					or.l.Info("Get message")
-					var data interface{}
-					err := or.sch.DeserializeInto(or.conf.OrdersTopic, e.Value, data)
+					data := dto.Order{}
+					err := or.sch.DeserializeInto(or.conf.OrdersTopic, e.Value, &data)
 					if err != nil {
 						or.l.Warn(err.Error())
 					} else {
