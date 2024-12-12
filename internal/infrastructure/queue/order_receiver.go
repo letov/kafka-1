@@ -4,7 +4,6 @@ import (
 	"context"
 	"kafka-1/internal/infrastructure/config"
 	"kafka-1/internal/infrastructure/dto"
-	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.uber.org/fx"
@@ -101,16 +100,14 @@ func (orf *OrderReceiverFactory) NewOrderReceiver(groupId string, autoCommit boo
 		"acks":               orf.conf.KafkaAcks,
 	})
 	if err != nil {
-		orf.l.Error("Error creating consumer: ", err)
-		os.Exit(1)
+		orf.l.Fatal("Error creating consumer: ", err)
 	}
 
 	orf.l.Info("Consumer created")
 
 	err = cons.SubscribeTopics([]string{orf.conf.OrdersTopic}, nil)
 	if err != nil {
-		orf.l.Error("Subscribe error:", err)
-		os.Exit(1)
+		orf.l.Fatal("Subscribe error:", err)
 	}
 
 	orf.cs = append(orf.cs, cons)

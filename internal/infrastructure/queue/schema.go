@@ -2,7 +2,6 @@ package queue
 
 import (
 	"kafka-1/internal/infrastructure/config"
-	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
@@ -30,20 +29,17 @@ func NewSchema(
 ) *Schema {
 	c, err := schemaregistry.NewClient(schemaregistry.NewConfig(conf.SchemaregistryUrl))
 	if err != nil {
-		l.Error("Failed to create schema registry ", zap.Error(err))
-		os.Exit(1)
+		l.Fatal("Failed to create schema registry ", zap.Error(err))
 	}
 
 	ser, err := jsonschema.NewSerializer(c, serde.ValueSerde, jsonschema.NewSerializerConfig())
 	if err != nil {
-		l.Error("Failed to create ser ", zap.Error(err))
-		os.Exit(1)
+		l.Fatal("Failed to create ser ", zap.Error(err))
 	}
 
 	deser, err := jsonschema.NewDeserializer(c, serde.ValueSerde, jsonschema.NewDeserializerConfig())
 	if err != nil {
-		l.Error("Failed to create deser ", zap.Error(err))
-		os.Exit(1)
+		l.Fatal("Failed to create deser ", zap.Error(err))
 	}
 
 	return &Schema{&c, ser, deser}

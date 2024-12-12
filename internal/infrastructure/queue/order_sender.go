@@ -4,7 +4,6 @@ import (
 	"context"
 	"kafka-1/internal/infrastructure/config"
 	"kafka-1/internal/infrastructure/storage"
-	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.uber.org/fx"
@@ -38,8 +37,7 @@ func (osr OrderSender) SendMessages(
 			case km := <-inCh:
 				val, err := osr.sch.Serialize(osr.c.OrdersTopic, km.Msg)
 				if err != nil {
-					osr.l.Error("Error Serialize ", err)
-					os.Exit(1)
+					osr.l.Fatal("Error Serialize ", err)
 				}
 				err = osr.p.Produce(&kafka.Message{
 					TopicPartition: kafka.TopicPartition{Topic: &osr.c.OrdersTopic, Partition: kafka.PartitionAny},
@@ -48,8 +46,7 @@ func (osr OrderSender) SendMessages(
 					Headers:        []kafka.Header{{Key: "TEST_HEADER", Value: []byte("TEST_HEADER_VAL")}},
 				}, nil)
 				if err != nil {
-					osr.l.Error("Error delivered ", err)
-					os.Exit(1)
+					osr.l.Fatal("Error delivered ", err)
 				}
 			}
 		}
@@ -72,8 +69,7 @@ func (osr OrderSender) SendMessages(
 						osr.l.Info("Delivered message ", *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 					}
 				case kafka.Error:
-					osr.l.Error("Error delivered ", ev)
-					os.Exit(1)
+					osr.l.Fatal("Error delivered ", ev)
 				default:
 					osr.l.Info("Ignored event ", ev)
 				}
@@ -88,8 +84,7 @@ func NewOrderSender(lc fx.Lifecycle, c *config.Config, l *zap.SugaredLogger, s *
 		"acks":              c.KafkaAcks,
 	})
 	if err != nil {
-		l.Error("Can't create producer: ", err.Error())
-		os.Exit(1)
+		l.Fatal("Can't create producer: ", err.Error())
 	}
 	l.Info("Producer successfully created")
 
