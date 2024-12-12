@@ -23,6 +23,7 @@ type OrderReceiverFactory struct {
 	conf *config.Config
 	l    *zap.SugaredLogger
 	sch  *Schema
+	bsp  IBootstrapServersProvider
 }
 
 func (or OrderReceiver) ReceiveMessages(
@@ -69,6 +70,7 @@ func NewOrderReceiverFactory(
 	conf *config.Config,
 	l *zap.SugaredLogger,
 	sch *Schema,
+	bsp IBootstrapServersProvider,
 ) *OrderReceiverFactory {
 	cs := make([]*kafka.Consumer, 0)
 
@@ -81,7 +83,7 @@ func NewOrderReceiverFactory(
 		},
 	})
 
-	return &OrderReceiverFactory{cs, conf, l, sch}
+	return &OrderReceiverFactory{cs, conf, l, sch, bsp}
 }
 
 func (orf *OrderReceiverFactory) NewOrderReceiver(groupId string, autoCommit bool) *OrderReceiver {
@@ -92,7 +94,7 @@ func (orf *OrderReceiverFactory) NewOrderReceiver(groupId string, autoCommit boo
 		autoCommitStr = "false"
 	}
 	cons, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers":  orf.conf.KafkaBootstrapServers,
+		"bootstrap.servers":  orf.bsp.Provide(),
 		"group.id":           groupId,
 		"session.timeout.ms": orf.conf.KafkaSessionTimeoutMs,
 		"auto.offset.reset":  orf.conf.KafkaAutoOffsetReset,

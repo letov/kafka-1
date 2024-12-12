@@ -6,6 +6,7 @@ import (
 	"kafka-1/internal/infrastructure/queue"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/magiconair/properties/assert"
 	"go.uber.org/zap"
@@ -67,10 +68,13 @@ func Test_Kafka(t *testing.T) {
 
 				cnt1 := 0
 				cnt2 := 0
+				timeout := time.After(5 * time.Second)
 
 			loop:
 				for {
 					select {
+					case <-timeout:
+						l.Fatal("test timeout")
 					case m1 := <-outCh1:
 						l.Info("ch1: ", m1)
 						cnt1++

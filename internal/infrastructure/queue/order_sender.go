@@ -78,9 +78,16 @@ func (osr OrderSender) SendMessages(
 	}()
 }
 
-func NewOrderSender(lc fx.Lifecycle, c *config.Config, l *zap.SugaredLogger, s *storage.Redis, sch *Schema) *OrderSender {
+func NewOrderSender(
+	lc fx.Lifecycle,
+	c *config.Config,
+	l *zap.SugaredLogger,
+	s *storage.Redis,
+	sch *Schema,
+	bsp IBootstrapServersProvider,
+) *OrderSender {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": c.KafkaBootstrapServers,
+		"bootstrap.servers": bsp.Provide(),
 		"acks":              c.KafkaAcks,
 	})
 	if err != nil {

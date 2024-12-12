@@ -25,7 +25,7 @@ type Config struct {
 func NewConfig() *Config {
 	var err error
 	if os.Getenv("IS_TEST_ENV") == "true" {
-		err = godotenv.Load("../../.env")
+		err = godotenv.Load("../../.env.test")
 	} else {
 		err = godotenv.Load(".env")
 	}

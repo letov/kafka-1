@@ -10,20 +10,32 @@ import (
 	"go.uber.org/fx"
 )
 
-func GetConstructors() []interface{} {
+func GetBaseConstructors() []interface{} {
 	return []interface{}{
-		app.Start,
-		config.NewConfig,
 		logger.NewLogger,
 		queue.NewOrderSender,
 		queue.NewOrderReceiverFactory,
 		storage.NewStorage,
 		queue.NewSchema,
+		config.NewConfig,
+	}
+}
+
+func GetAppConstructors() []interface{} {
+	return []interface{}{
+		app.Start,
+		queue.NewBootstrapServers,
+		fx.Annotate(func(q *queue.BootstrapServersProvider) *queue.BootstrapServersProvider {
+			return q
+		}, fx.As(new(queue.IBootstrapServersProvider))),
 	}
 }
 
 func InjectApp() fx.Option {
 	return fx.Provide(
-		GetConstructors()...,
+		append(
+			GetBaseConstructors(),
+			GetAppConstructors()...,
+		)...,
 	)
 }
