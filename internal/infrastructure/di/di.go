@@ -1,6 +1,7 @@
 package di
 
 import (
+	"kafka-1/internal/application/app"
 	"kafka-1/internal/infrastructure/config"
 	"kafka-1/internal/infrastructure/logger"
 	"kafka-1/internal/infrastructure/queue"
@@ -11,6 +12,7 @@ import (
 
 func GetConstructors() []interface{} {
 	return []interface{}{
+		app.Start,
 		config.NewConfig,
 		logger.NewLogger,
 		queue.NewOrderSender,
